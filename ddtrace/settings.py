@@ -29,6 +29,7 @@ class Config(object):
         # use a dict as underlying storing mechanism
         self._config = {}
         self._http = HttpConfig()
+        self._runtime_metrics = RuntimeMetricsConfig()
 
     def __getattr__(self, name):
         if name not in self._config:
@@ -323,6 +324,17 @@ class HttpConfig(object):
 
     def __repr__(self):
         return '<HttpConfig traced_headers={}>'.format(self._whitelist_headers)
+
+
+class RuntimeMetricsConfig(object):
+    """
+    Configure runtime metrics and tags reported by the tracer.
+
+    TODO: is this where we want to do this?
+    """
+
+    def __init__(self):
+        pass
 
 
 # Configure our global configuration object
