@@ -1,7 +1,7 @@
 import logging
 import opentracing
 from opentracing import Format
-from opentracing.scope_managers import ThreadLocalScopeManager
+from .scope_manager import DDTraceAwareThreadLocalScopeManager
 
 import ddtrace
 from ddtrace import Tracer as DatadogTracer
@@ -14,7 +14,6 @@ from .propagation import HTTPPropagator
 from .span import Span
 from .span_context import SpanContext
 from .settings import ConfigKeys as keys, config_invalid_keys
-from .utils import get_context_provider_for_scope_manager
 
 log = logging.getLogger(__name__)
 
@@ -75,9 +74,7 @@ class Tracer(opentracing.Tracer):
                                       keyword argument.
                                   """)
 
-        self._scope_manager = scope_manager or ThreadLocalScopeManager()
-
-        dd_context_provider = get_context_provider_for_scope_manager(self._scope_manager)
+        self._scope_manager = scope_manager or DDTraceAwareThreadLocalScopeManager()
 
         self._dd_tracer = dd_tracer or ddtrace.tracer or DatadogTracer()
         self._dd_tracer.set_tags(self._config.get(keys.GLOBAL_TAGS))
@@ -87,7 +84,7 @@ class Tracer(opentracing.Tracer):
                                   sampler=self._config.get(keys.SAMPLER),
                                   settings=self._config.get(keys.SETTINGS),
                                   priority_sampling=self._config.get(keys.PRIORITY_SAMPLING),
-                                  context_provider=dd_context_provider,
+                                  context_provider=self._scope_manager.dd_context_provider,
                                   )
         self._propagators = {
             Format.HTTP_HEADERS: HTTPPropagator(),
